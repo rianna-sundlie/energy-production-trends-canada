@@ -12,13 +12,13 @@ The analysis uses real data from the Government of Canada Open Data Portal and a
 This project is part of a statistical analysis course and demonstrates reproducible workflows using R, tidyverse, and structured project organization.
 
 ## Project Structure
-  data/raw/ - Original dataset from the Government of Canada
-  data/cleaned/ - Aggregated yearly totals for renewable and non-renewable energy
-  notebooks/ - R Markdown notebook (.Rmd) and knitted HTML (.nb.html)
-  scripts/ - Optional scripts for data cleaning or model saving
-  visuals/ - Final polished charts
-  visuals/charts/ - Draft or exploratory charts
-  models/ saved model objects (MLE, trendlines)
+* data/raw/ - Original dataset from the Government of Canada
+* data/cleaned/ - Aggregated yearly totals for renewable and non-renewable energy
+* notebooks/ - R Markdown notebook (.Rmd) and knitted HTML (.nb.html)
+* scripts/ - Optional scripts for data cleaning or model saving
+* visuals/ - Final polished charts
+* visuals/charts/ - Draft or exploratory charts
+* models/ saved model objects (MLE, trendlines)
 
 ## Data Source
 The dataset includes:
@@ -34,26 +34,26 @@ Excerpt from the report:
 ## Methods
 The analysis includes:
 1) Data Preparation
-  Filtered to include only the Canada region
-  Grouped energy sources into renewable and non‑renewable
-  Aggregated yearly totals for each category
+* Filtered to include only the Canada region
+* Grouped energy sources into renewable and non‑renewable
+* Aggregated yearly totals for each category
 
 2) Maximum Likelihood Estimation (MLE)
-  Estimated mean and standard deviation for:
-  Renewable energy generation
-  Non‑renewable energy generation
+* Estimated mean and standard deviation for:
+  + Renewable energy generation
+  + Non‑renewable energy generation
 
 3) Confidence Intervals
-  Constructed 95% CIs for:
-  Mean generation
-  Standard deviation
+* Constructed 95% CIs for:
+  + Mean generation
+  + Standard deviation
 
 4) Hypothesis Testing
-  Two‑sample t‑tests comparing:
-  Renewable vs non‑renewable means
-  Early period (2005–2010) vs late period (2011–2016)
+* Two‑sample t‑tests comparing:
+  + Renewable vs non‑renewable means
+  + Early period (2005–2010) vs late period (2011–2016)
 
 5) Visualizations
-Bar plot of yearly generation
-Time‑series plot with trendlines
-Boxplots for distribution comparisons
+* Bar plot of yearly generation
+* Time‑series plot with trendlines
+* Boxplots for distribution comparisons
