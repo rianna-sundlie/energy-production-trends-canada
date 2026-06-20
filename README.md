@@ -18,7 +18,8 @@ This project is part of a statistical analysis course and demonstrates reproduci
 * scripts/ - Optional scripts for data cleaning or model saving
 * visuals/ - Final polished charts
 * visuals/charts/ - Draft or exploratory charts
-* models/ saved model objects (MLE, trendlines)
+* models/ - Saved model objects (MLE, trendlines)
+* reports/ - Complete written analysis and detailed findings
 
 ## Data Source
 The dataset includes:
