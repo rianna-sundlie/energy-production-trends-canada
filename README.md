@@ -90,4 +90,3 @@ The analysis includes:
 
 ## References
 - Secretariat, T. B. of C., & Secretariat, T. B. of C. (n.d.). Open Government Portal. Open.canada.ca. https://open.canada.ca/data/en/dataset/2cdf43fc-d4aa-4604-9f21-29777d955810/resource/b751e0dc-1a00-417a-9f04-b4777adb521f
-- United Nations. “What Is Renewable Energy?” United Nations, 2024, www.un.org/en/climatechange/what-is-renewable-energy.
