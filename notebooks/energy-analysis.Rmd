@@ -1,0 +1,217 @@
+---
+title: "Renewable vs Non-Renewable Energy Trends"
+author: "Rianna Sundlie"
+date: "2025-04-04"
+output: html_notebook
+---
+
+# Executive Summary
+This analysis evaluates Canadian electricity generation from 2005–2016, comparing renewable and non‑renewable sources to understand long‑term trends, variability, and structural shifts in production. Renewable energy consistently generated more electricity than non‑renewable sources across the entire period, and the gap widened over time due to steady growth in hydro, wind, and solar output.
+
+Statistical modeling confirms that renewable generation is both higher on average and more variable, reflecting expansion and investment in clean energy technologies. A two‑period comparison (2005–2010 vs. 2011–2016) shows a significant increase in renewable production, while non‑renewable output remained stable with no meaningful change.
+
+Overall, the results align with Canada’s broader transition toward renewable energy, highlighting a clear upward trajectory in clean electricity generation and a plateau in fossil‑fuel‑based sources.
+
+# Introduction
+This analysis examines trends in Canadian electricity generation from 2005 to 2016, comparing renewable and non‑renewable energy sources. The goal is to quantify long‑term changes, evaluate variability, and assess whether production patterns differ significantly across time periods.
+
+# Key Questions
+
+How have renewable and non‑renewable generation levels changed over time?
+
+Are renewable sources more variable than non‑renewable sources?
+
+Do the two categories differ significantly in mean production?
+
+Did production levels shift between 2005–2010 and 2011–2016?
+
+Tools Used: R, tidyverse, base R statistical functions
+
+```{r, include=FALSE}
+library(datasets)
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(here)
+```
+
+# Data Preparation
+```{r, echo=TRUE}
+# import the data set
+production <- read.csv(here("data", "raw", "electricity-generation-dataset.csv"))
+
+# define renewable vs nonrenewable
+renewables <- c("Hydro", "Wind", "Solar", "Biomass")
+nonrenewables <- c("Nuclear", "Coal", "Natural Gas", "Oil and Diesel")
+
+# conversion to factor type required for sorting
+production$Source <- as.factor(production$Source)
+
+# renewable energy source subset
+renew_df <- production[production$Source %in% renewables,]
+renewYearly <- renew_df %>%
+  group_by(Year) %>%
+  summarise(TotalRenewable = sum(Data, na.rm = TRUE))
+
+# non-renewable energy source subset
+nonrenew_df <- production[production$Source %in% nonrenewables,]
+nonrenewYearly <- nonrenew_df %>%
+  group_by(Year) %>%
+  summarise(TotalNonrenewable = sum(Data, na.rm = TRUE))
+
+```
+Summary: 
+Renewable generation includes hydro, wind, solar, and biomass. Non‑renewable includes nuclear, coal, natural gas, and oil/diesel. Annual totals were aggregated for each category.
+
+# Year-Over-Year Generation Comparison
+The following bar chart compares annual renewable and non‑renewable generation. This provides a high‑level view of the relative scale and direction of each category.
+
+```{r, echo=TRUE}
+barplot(t(as.matrix(cbind(renewYearly$TotalRenewable, nonrenewYearly$TotalNonrenewable))),
+        beside=TRUE, names.arg=renewYearly$Year, col=c("green", "red"),
+        legend.text=c("Renewable", "Non-Renewable"), main="Yearly Electricity Generation in Canada", ylab = "Energy Generated (GWh)", xlab = "Year")
+```
+Insight:  
+Renewable generation consistently exceeds non‑renewable generation across the entire period, with the gap widening over time.
+
+# Maximum Likelihood Estimates (MLE)
+MLE is used to estimate the mean and standard deviation of annual generation for each category. These metrics help quantify central tendency and variability.
+```{r, echo=TRUE, warning=FALSE}
+source(here("scripts", "03_mle_function.R"))
+
+# renewable MLE
+startRenew <-  c(mean(renewYearly$TotalRenewable), sd(renewYearly$TotalRenewable))
+mleRenew <- optim(
+  startRenew,
+  logLikelihood,
+  data = renewYearly$TotalRenewable,
+  method = "L-BFGS-B",
+  lower = c(-Inf, 1e-6)   # sd must be > 0
+)
+
+# non-renewable MLE
+startNonrenew <- c(mean(nonrenewYearly$TotalNonrenewable), sd(nonrenewYearly$TotalNonrenewable))
+mleNonrenew <- optim(
+  startNonrenew,
+  logLikelihood,
+  data = nonrenewYearly$TotalNonrenewable,
+  method = "L-BFGS-B",
+  lower = c(-Inf, 1e-6)
+)
+```
+Key Results:
+Renewable mean ≈ 783,873 GWh
+Non‑renewable mean ≈ 456,391 GWh
+Renewable SD is substantially higher, indicating greater year‑to‑year variability.
+
+# Trend Analysis Over Time
+This visualization highlights long‑term directional changes and overlays MLE‑based average production levels.
+```{r, echo=TRUE}
+plot(renewYearly$Year, renewYearly$TotalRenewable, type='o', col = 'green', cex.axis=0.8, xlab = "Year", ylab = "Electricity Generation (GWh)", main = "Electricity Generation Over Time", ylim = c( min( c(renewYearly$TotalRenewable, nonrenewYearly$TotalNonrenewable)), max( c(renewYearly$TotalRenewable, nonrenewYearly$TotalNonrenewable))))
+
+lines(nonrenewYearly$Year, nonrenewYearly$TotalNonrenewable, type = 'o', col = 'red')
+
+# trend lines
+abline(lm(renewYearly$TotalRenewable~renewYearly$Year), col="lightgreen", lty = 'dotted')
+abline(lm(nonrenewYearly$TotalNonrenewable~nonrenewYearly$Year), col="red", lty = 'dotted')
+
+# MLE means
+abline(h = mleRenew$par[1], col="darkgreen", lty = 'longdash')
+abline(h = mleNonrenew$par[1], col="darkred", lty = 'longdash')
+
+legend("right", legend = c("Renewable", "Non-Renewable"), col = c("green", "red"), lty = 1, pch = 1)
+```
+Insight:  
+Renewable generation shows a clear upward trend, while non‑renewable generation remains relatively stable.
+
+# Confidence Intervals
+Confidence intervals quantify uncertainty around the MLE estimates.
+```{r, echo=TRUE}
+# renewable 95% CI for mean
+nrenew <- length(renewYearly$TotalRenewable)
+se_meanRenew <- mleRenew$par[2] / sqrt(nrenew)
+z <- qnorm(0.975)
+ciRenewMean <- c(mleRenew$par[1] - z * se_meanRenew, 
+                 mleRenew$par[1] + z * se_meanRenew)
+
+# renewable 95% CI for SD
+chi2renew_lower <- qchisq(0.975, df = nrenew-1)
+chi2renew_upper <- qchisq(0.025, df = nrenew-1)
+ciRenewSd <- c(sqrt((nrenew-1)*(mleRenew$par[2]^2)/chi2renew_lower),
+               sqrt((nrenew-1)*(mleRenew$par[2]^2)/chi2renew_upper))
+
+# non-renewable 95% CI for mean
+nnonrenew <- as.numeric(length(nonrenewYearly$TotalNonrenewable))
+se_meanNonrenew <- mleNonrenew$par[2] / sqrt(nnonrenew)
+ciNonrenewMean <- c(mleNonrenew$par[1] - z * se_meanNonrenew, 
+                    mleNonrenew$par[1] + z * se_meanNonrenew)
+
+# non-renewable 95% CI for SD
+chi2nonrenew_lower <- qchisq(0.975, df = nnonrenew-1)
+chi2nonrenew_upper <- qchisq(0.025, df = nnonrenew-1)
+ciNonrenewSd <- c(sqrt((nnonrenew-1) * (mleNonrenew$par[2]^2) / chi2nonrenew_lower),
+                  sqrt((nnonrenew-1) * (mleNonrenew$par[2]^2) / chi2nonrenew_upper))
+```
+Insight:  
+Renewable generation has a wider confidence interval for SD, confirming higher variability relative to non‑renewable sources.
+
+# Hypothesis Testing
+Statistical tests are used to determine whether observed differences in electricity generation are meaningful or simply due to random variation. Visualizations (boxplots) are included to support the interpretation of each test.
+
+## Renewable VS Non-renewable Means
+```{r, echo = TRUE}
+t.test1 <- t.test(renewYearly$TotalRenewable, nonrenewYearly$TotalNonrenewable, 
+                  alternative='two.sided')
+t.test1
+
+boxplot(renewYearly$TotalRenewable, nonrenewYearly$TotalNonrenewable,
+        names=c("Renewable", "Non-Renewable"), col=c("green", "red"),
+        main="Distribution of Electricity Generation")
+```
+Result:
+The boxplot shows a clear separation between renewable and non‑renewable generation levels. Renewable output is consistently higher and exhibits greater variability.
+The t‑test result (p‑value ≈ 4.8e‑12) confirms a statistically significant difference in mean production between the two categories.
+
+## Early vs Late Period Comparison
+This evaluates whether production shifted between 2005–2010 and 2011–2016.
+
+### Renewable Energy
+```{r, echo = TRUE}
+earlyRenew <- subset(renewYearly, Year <= 2010)
+lateRenew <- subset(renewYearly, Year > 2010)
+
+t.test2 <- t.test(earlyRenew$TotalRenewable, lateRenew$TotalRenewable)
+t.test2
+
+boxplot(earlyRenew$TotalRenewable, lateRenew$TotalRenewable, 
+        names=c("Period 1 (2005-2010)", "Period 2 (2011-2016)"), col=c("green", "green"),
+        main="Distribution of Renewable Electricity Generation")
+```
+Result:  
+The later period shows a noticeable upward shift in renewable generation.
+The t‑test (p‑value ≈ 0.0002) confirms a significant increase in renewable output between the two periods.
+
+### Non-Renewable Energy
+```{r, echo=TRUE}
+earlyNonrenew <- subset(nonrenewYearly, Year <= 2010)
+lateNonrenew <- subset(nonrenewYearly, Year > 2010)
+
+t.test3 <- t.test(earlyNonrenew$TotalNonrenewable, lateNonrenew$TotalNonrenewable)
+t.test3
+
+boxplot(earlyNonrenew$TotalNonrenewable, lateNonrenew$TotalNonrenewable, 
+        names=c("Period 1 (2005-2010)", "Period 2 (2011-2016)"), col=c("red", "red"), 
+        main="Distribution of Non-renewable Electricity Generation")
+```
+Result:  
+The distributions for early and late periods overlap substantially, indicating stability in non‑renewable generation.
+The t‑test (p‑value ≈ 0.2465) confirms no statistically significant change across the two periods.
+
+# Key Takeaways
+Renewable energy production is higher, more variable, and increasing over time.
+
+Non‑renewable production is lower and stable, with no significant long‑term shift.
+
+Statistical tests confirm strong differences between categories and across time periods.
+
+These findings align with Canada’s broader transition toward renewable energy sources.
