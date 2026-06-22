@@ -17,7 +17,6 @@ This project is part of a statistical analysis course and demonstrates reproduci
 * notebooks/ - R Markdown notebook (.Rmd) and knitted HTML (.nb.html)
 * scripts/ - Optional scripts for data cleaning or model saving
 * visuals/ - Final polished charts
-* visuals/charts/ - Draft or exploratory charts
 * models/ - Saved model objects (MLE, trendlines)
 * reports/ - Complete written analysis and detailed findings
 
